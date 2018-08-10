@@ -1,4 +1,4 @@
-matlab%% == omMachina: OMEGA Preprocessing ==================================
+%% == omMachina: OMEGA Preprocessing ==================================
 % Based on OMEGA's preprocessing script by Guiomar Niso (26 May 2016)
 % 1. Import BIDS dataset (will not work if we are not using this format!)
 % 2. Import subject's anatomy
@@ -10,7 +10,7 @@ matlab%% == omMachina: OMEGA Preprocessing ==================================
 % 8. SSP: Sacades and EMG
 % 9. Preprocess empty room recordings
 % 10. Separate into FOI's
-% 11. Data/Noise Covariance
+% 11. Data/Noise Covariances
 % 12. Compute head model
 % 13. Inverse Modelling: Beamformers
 % 14. Snapshot: Contact sheet of sources
@@ -149,6 +149,23 @@ for iSubject=1:nSubjects
         'tag', 'baselineresting', ...
         'search', 1, ...
         'select', 1);  % Select only the files with the tag
+
+    % Process: If there is no baseline resting, analyze post-experiment
+    % baseline
+    if isempty(sData)
+        sData = bst_process('CallProcess', 'process_select_files_data', ...
+        [], [], 'subjectname',   SubjectNames{iSubject});
+    
+        sData = bst_process('CallProcess', 'process_select_tag', ...
+        sData, [], ...
+        'tag', 'restingaftertask', ...
+        'search', 1, ...
+        'select', 1);  % Select only the files with the tag
+    
+        sData = sData(1);
+    else 
+        sData = sData(1);
+    end 
     
     % Process: Convert to continuous (CTF): Continuous
     cont_bool = load(file_fullpath(sData.FileName), 'F');
@@ -167,6 +184,20 @@ for iSubject=1:nSubjects
         'tag', 'baselineresting', ... % Differentiate from other files
         'search', 1, ... % 1: Filename, 2: Comments
         'select', 1);  % Select only the files with the tag
+    
+    % Process: If there is no baseline resting, analyze post-experiment
+    % baseline
+    if isempty(sFilesR)
+        sFilesR = bst_process('CallProcess', 'process_select_tag', ...
+        sRefined, [], ...
+        'tag', 'restingaftertask', ... % Differentiate from other files
+        'search', 1, ... % 1: Filename, 2: Comments
+        'select', 1);  % Select only the files with the tag
+    
+        sFilesR = sFilesR(1);
+    else 
+        sFilesR = sFilesR(1);
+    end 
     
     % Process: Snapshot of Sensors/MRI registration (goes into report)
     bst_process('CallProcess', 'process_snapshot', ...
@@ -242,6 +273,20 @@ for iSubject=1:nSubjects
         'tag', 'baselineresting', ...
         'search', 1, ...
         'select', 1);  % Select only the files with the tag
+    
+    % Process: If there is no baseline resting, analyze post-experiment
+    % baseline
+    if isempty(sFilesRESTING)
+        sFilesRESTING = bst_process('CallProcess', 'process_select_tag', ...
+        sFilesMEG, [], ...
+        'tag', 'restingaftertask', ... % Differentiate from other files
+        'search', 1, ... % 1: Filename, 2: Comments
+        'select', 1);  % Select only the files with the tag
+    
+        sFilesRESTING = sFilesRESTING(1);
+    else 
+        sFilesRESTING = sFilesRESTING(1);
+    end 
     
     % SSP detect and remove blinks per run
     for iRun=1:numel(sFilesRESTING)
