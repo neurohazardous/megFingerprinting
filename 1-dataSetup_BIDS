@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# License 
+# This file is part of the project megFingerprinting. All of megFingerprinting code is free software: you can redistribute 
+# it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, 
+# either version 3 of the License, or (at your option) any later version. 
+# megFingerprinting is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the 
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+# more details. You should have received a copy of the GNU General Public License along with megFingerprinting. 
+# If not, see <https://www.gnu.org/licenses/>.
+
 # Background
 # This script needs to be run from the local computer!
 # Give the shell permission to execute this: chmod 755 0-dataSetup_BIDS
@@ -34,5 +43,5 @@ do
 done
 
 # Download metadata and empty room recordings
-# rsync -av $BIC_PATH/subject_metadata $LOCAL_PATH
-# rsync -av $BIC_PATH/sub-emptyroom $LOCAL_PATH
+rsync -av $BIC_PATH/subject_metadata $LOCAL_PATH
+rsync -av $BIC_PATH/sub-emptyroom $LOCAL_PATH
