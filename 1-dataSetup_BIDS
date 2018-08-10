@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Background
+# This script needs to be run from the local computer!
+# Give the shell permission to execute this: chmod 755 0-dataSetup_BIDS
+# Type ./1-dataSetup_BIDS to run it
+
+# Constants
+BIC_PATH="hperez@login.bic.mni.mcgill.ca:/meg/meg2/omega/OMEGA_BIDS"
+LOCAL_PATH="/home/labuser/data/MNI_hector/data/OMEGA_BIDS"
+BIC_PREPROC_ANAT="hperez@login.bic.mni.mcgill.ca:/meg/meg2/omega/OMEGA_BSTdb/OMEGA_BSTdb_v1/anat"
+
+# Create subject txt file
+ssh hperez@login.bic.mni.mcgill.ca ls -d /meg/meg2/omega/OMEGA_BIDS/sub-0* > $LOCAL_PATH/subs.txt
+
+# Download the extra docs from the BIC server
+scp $BIC_PATH/CHANGES.txt $BIC_PATH/dataset_description.json $BIC_PATH/NisoEtAl2015_OMEGA.pdf $BIC_PATH/OMEGA_README.pdf $BIC_PATH/participants.tsv $LOCAL_PATH
+
+# From the full subs.txt, take n people
+sed -n -e 1,100p $LOCAL_PATH/subs.txt > $LOCAL_PATH/subset_subs.txt
+
+# Download n amount of subjects (only session 1), but only if they have anatomy data
+for sub in $( cat $LOCAL_PATH/subset_subs.txt )
+do
+    if ssh hperez@login.bic.mni.mcgill.ca [ -d ${sub}/ses-0001/anat ]; then
+        mkdir $LOCAL_PATH/${sub:(-8)}
+        mkdir $LOCAL_PATH/${sub:(-8)}/ses-0001
+        rsync -av $BIC_PATH/${sub:(-8)}/*.json $LOCAL_PATH/${sub:(-8)}/ses-0001
+        rsync -av $BIC_PATH/${sub:(-8)}/ses-0001/meg $LOCAL_PATH/${sub:(-8)}/ses-0001
+        rsync -av $BIC_PREPROC_ANAT/${sub:(-8)}/ $LOCAL_PATH/${sub:(-8)}/ses-0001/anat
+    else
+        echo "${sub:(-8)} has no anatomy files!" >> $LOCAL_PATH/subs_noAnat.txt
+    fi
+done
+
+# Download metadata and empty room recordings
+# rsync -av $BIC_PATH/subject_metadata $LOCAL_PATH
+# rsync -av $BIC_PATH/sub-emptyroom $LOCAL_PATH
