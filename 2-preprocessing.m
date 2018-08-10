@@ -1,3 +1,17 @@
+%% == License ==========================================================
+% This file is part of the project megFingerprinting. All of 
+% megFingerprinting code is free software: you can redistribute 
+% it and/or modify it under the terms of the GNU General Public License as 
+% published by the Free Software Foundation, 
+% either version 3 of the License, or (at your option) any later version. 
+% megFingerprinting is distributed in the hope that it will be useful, but 
+% WITHOUT ANY WARRANTY; without even the 
+% implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+% See the GNU General Public License for 
+% more details. You should have received a copy of the GNU General Public 
+% License along with megFingerprinting. 
+% If not, see <https://www.gnu.org/licenses/>.
+
 %% == omMachina: OMEGA Preprocessing ==================================
 % Based on OMEGA's preprocessing script by Guiomar Niso (26 May 2016)
 % 1. Import BIDS dataset (will not work if we are not using this format!)
@@ -18,11 +32,6 @@
 % 16. Output CSV file
 % 17. Save and ouput report
 % 18. Delete intermediate files and save beamformer weights
-
-% Log
-% Hector D Orozco Perez, 05 June 2018 (v0)
-% Hector D Orozco Perez, 11 June 2018 (v1) -> broke brainstorm
-% Hector D Orozco Perez, 02 August 2018 (v2) -> ready to escalate!
 
 %% == Initiate Brainstorm and protocol setup =============================
 clc; clear;
