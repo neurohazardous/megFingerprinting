@@ -54,10 +54,10 @@ end
 
 %% == Parameters =========================================================
 % MEG datasets storage
-mydirMEG = '/home/labuser/data/MNI_hector/data/OMEGA_BIDS';
+mydirMEG = '/home/labuser/data/megFingerprinting/data/OMEGA_BIDS';
 
 % Dir to save progress report
-mydirBST = '/home/labuser/data/MNI_hector/output/reports';
+mydirBST = '/home/labuser/data/megFingerprinting/output/reports';
 
 % Dir of database
 mydirDB = '/home/labuser/data/brainstorm_db/omMachina/data';
@@ -88,8 +88,8 @@ win_overlap = 50; % percentage
 
 
 % .mat files include variables to arrange the atlas into Yeo's RSN
-load('/home/labuser/data/MNI_hector/dependencies/desikan_scale33.mat');
-load('/home/labuser/data/MNI_hector/dependencies/rsn_mapping_yeo.mat');
+load('/home/labuser/data/megFingerprinting/dependencies/desikan_scale33.mat');
+load('/home/labuser/data/megFingerprinting/dependencies/rsn_mapping_yeo.mat');
 
 %% == 1) Import BIDS dataset =============================================
 % Import BIDS dataset - This will import all subjects in the file!
@@ -107,7 +107,7 @@ SubjectNames = {sSubjects.Subject.Name}';
 % downloaded with the bash script)
 
 for iSubject=1:(numel(SubjectNames)-1)
-    source = ['../data/MNI_hector/data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat']
+    source = ['../data/megFingerprinting/data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat']
     destination = ['../data/brainstorm_db/omMachina/anat/' SubjectNames{iSubject}]
     copyfile(source, destination)
 end
@@ -137,7 +137,7 @@ sSubjects = bst_get('ProtocolSubjects');
 SubjectNames = {sSubjects.Subject.Name}';
 nSubjects = (numel(SubjectNames)-1);
 
-for iSubject=1:nSubjects
+for iSubject=43:nSubjects
     tic
     % Start a new report
     reportName = [SubjectNames{iSubject} '_report'];
@@ -718,7 +718,7 @@ for iSubject=1:nSubjects
         
         % Get the output from the command line
         diary off
-        diaryFileName = ['/home/labuser/data/MNI_hector/output/pca_output/' SubjectNames{iSubject} '_' sFOI_names{iFOI} '_pca_output.txt' ];
+        diaryFileName = ['/home/labuser/data/megFingerprinting/output/pca_output/' SubjectNames{iSubject} '_' sFOI_names{iFOI} '_pca_output.txt' ];
         diary(diaryFileName)
         
         % Process: AEC NxN for training set
@@ -755,7 +755,7 @@ for iSubject=1:nSubjects
         
         % Copy the matrix to outputs
         source = file_fullpath(sSources.training.(sFOI_names{iFOI}).FileName);
-        destination = ['/home/labuser/data/MNI_hector/output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_training_' sFOI_names{iFOI} '.mat']
+        destination = ['/home/labuser/data/megFingerprinting/output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_training_' sFOI_names{iFOI} '.mat']
         copyfile(source, destination)
         db_reload_database('current')
         
@@ -796,14 +796,14 @@ for iSubject=1:nSubjects
         
         % Copy the matrix to outputs
         source = file_fullpath(sSources.validation.(sFOI_names{iFOI}).FileName);
-        destination = ['/home/labuser/data/MNI_hector/output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_validation_' sFOI_names{iFOI} '.mat']
+        destination = ['/home/labuser/data/megFingerprinting/output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_validation_' sFOI_names{iFOI} '.mat']
         copyfile(source, destination)
         db_reload_database('current')
     end
     
     %% == 16) Output CSV file ====================
     % Training set
-    datei = fopen(['/home/labuser/data/MNI_hector/output/csv_matrices/' SubjectNames{iSubject} '_aecMatrix_training.csv'], 'w');
+    datei = fopen(['/home/labuser/data/megFingerprinting/output/csv_matrices/' SubjectNames{iSubject} '_aecMatrix_training.csv'], 'w');
     for z=1:size(sMatrix.training, 1)
         for s=1:size(sMatrix.training, 2)
             var = sMatrix.training{z,s};
@@ -840,7 +840,7 @@ for iSubject=1:nSubjects
     fclose(datei);
     
     %% Validation set
-    datei = fopen(['/home/labuser/data/MNI_hector/output/csv_matrices/' SubjectNames{iSubject} '_aecMatrix_validation.csv'], 'w');
+    datei = fopen(['/home/labuser/data/megFingerprinting/output/csv_matrices/' SubjectNames{iSubject} '_aecMatrix_validation.csv'], 'w');
     for z=1:size(sMatrix.validation, 1)
         for s=1:size(sMatrix.validation, 2)
             var = sMatrix.validation{z,s};
@@ -888,7 +888,7 @@ for iSubject=1:nSubjects
     for iFOI = 1:nFOI
         temp_source = dir(['/home/labuser/data/brainstorm_db/omMachina/data/' SubjectNames{iSubject} '/meg_' sFOI_names{iFOI} '/results*']);
         source = ['/home/labuser/data/brainstorm_db/omMachina/data/' SubjectNames{iSubject} '/meg_' sFOI_names{iFOI} '/' temp_source.name ];
-        destination = ['/home/labuser/data/MNI_hector/output/beamformer_weights/' SubjectNames{iSubject} '_beamformer_weights_' sFOI_names{iFOI} '.mat'];
+        destination = ['/home/labuser/data/megFingerprinting/output/beamformer_weights/' SubjectNames{iSubject} '_beamformer_weights_' sFOI_names{iFOI} '.mat'];
         copyfile(source, destination)
     end
     
