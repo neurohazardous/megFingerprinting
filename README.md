@@ -52,5 +52,5 @@ For this project we've been using [OMEGA](https://www.mcgill.ca/bic/resources/om
 ### 3-matrix_visualization
 * This Jupyter notebook helps you visualize specific subject's connectivity matrices (select subject, frequency band, and what matrix to visualize in the second box)
 
-### 4-deep_learning_classifier
+### 4-meg_identification.ipynb
 * The classifier
