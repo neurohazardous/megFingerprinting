@@ -11,12 +11,12 @@
 
 # Background
 # This script needs to be run from the local computer!
-# Give the shell permission to execute this: chmod 755 0-dataSetup_BIDS
+# Give the shell permission to execute this: chmod 755 1-dataSetup_BIDS
 # Type ./1-dataSetup_BIDS to run it
 
 # Constants
 BIC_PATH="hperez@login.bic.mni.mcgill.ca:/meg/meg2/omega/OMEGA_BIDS"
-LOCAL_PATH="/home/labuser/data/MNI_hector/data/OMEGA_BIDS"
+LOCAL_PATH="/home/labuser/data/megFingerprinting/data/OMEGA_BIDS"
 BIC_PREPROC_ANAT="hperez@login.bic.mni.mcgill.ca:/meg/meg2/omega/OMEGA_BSTdb/OMEGA_BSTdb_v1/anat"
 
 # Create subject txt file
