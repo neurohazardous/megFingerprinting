@@ -137,7 +137,7 @@ sSubjects = bst_get('ProtocolSubjects');
 SubjectNames = {sSubjects.Subject.Name}';
 nSubjects = (numel(SubjectNames)-1);
 
-for iSubject=43:nSubjects
+for iSubject=1:nSubjects
     tic
     % Start a new report
     reportName = [SubjectNames{iSubject} '_report'];
@@ -178,10 +178,46 @@ for iSubject=43:nSubjects
     
     % Process: Convert to continuous (CTF): Continuous
     cont_bool = load(file_fullpath(sData.FileName), 'F');
+    time_bool = load(file_fullpath(sData.FileName), 'Time');
     if ~(strcmp(cont_bool.F.format, 'CTF-CONTINUOUS'))
         sData = bst_process('CallProcess', 'process_ctf_convert', ...
             sData, [], 'rectype', 2);
     end
+    
+    % Sometimes the files are not continous but they only contain one long
+    % epoch. This bit controls for that 
+    if isempty(sData)
+        if time_bool.Time(2) > 2
+       % Process: select data
+    sData = bst_process('CallProcess', 'process_select_files_data', ...
+        [], [], 'subjectname',   SubjectNames{iSubject});
+    
+    sData = bst_process('CallProcess', 'process_select_tag', ...
+        sData, [], ...
+        'tag', 'baselineresting', ...
+        'search', 1, ...
+        'select', 1);  % Select only the files with the tag
+        end 
+    end 
+    
+    % Process: If there is no baseline resting, analyze post-experiment
+    % baseline
+    if isempty(sData)
+        sData = bst_process('CallProcess', 'process_select_files_data', ...
+        [], [], 'subjectname',   SubjectNames{iSubject});
+    
+        sData = bst_process('CallProcess', 'process_select_tag', ...
+        sData, [], ...
+        'tag', 'restingaftertask', ...
+        'search', 1, ...
+        'select', 1);  % Select only the files with the tag
+    
+        sData = sData(1);
+    else 
+        sData = sData(1);
+    end 
+
+    
     
     % Process: Refine registration
     sRefined = bst_process('CallProcess', ...
@@ -454,10 +490,24 @@ for iSubject=43:nSubjects
     % Preprocess empty room recording!
     % Process: Convert to continuous (CTF): Continuous
     cont_bool = load(file_fullpath(sSubNoise.FileName), 'F');
+    time_bool = load(file_fullpath(sSubNoise.FileName), 'Time');
     if ~(strcmp(cont_bool.F.format, 'CTF-CONTINUOUS'))
         sSubNoise = bst_process('CallProcess', 'process_ctf_convert', ...
             sSubNoise, [], 'rectype', 2);
     end
+    
+    % Sometimes the files are not continous but they only contain one long
+    % epoch. This bit controls for that 
+    if isempty(sSubNoise)
+        if time_bool.Time(2) > 2
+        sSubNoise = bst_process('CallProcess', 'process_select_tag', ...
+            sNoise, [], ...
+            'tag', sub_noise, ...
+            'search', 1, ...
+            'select', 1);  % Select only the files with the tag
+        end 
+    end 
+    
     
     
     % Process: Notch filter line noise
@@ -682,7 +732,13 @@ for iSubject=43:nSubjects
     sSources = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
         'beta', ' ', 'gamma', ' ', 'hgamma', ' ', 'validation', ' ', ...
         'training', '');
-    sSources.training = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
+    sSources.training1 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
+        'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
+    sSources.training2 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
+        'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
+    sSources.training3 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
+        'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
+    sSources.training4 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
         'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
     sSources.validation = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
         'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
@@ -710,59 +766,71 @@ for iSubject=43:nSubjects
     end
     
     %% == 15) Amplitude Envelope Correlation =============================
-    sMatrix = struct('training', ' ', 'validation', ' ');
-    sMatrix.training = cell(27744, 4);
+    sMatrix = struct('training1', ' ', 'training2', ' ', 'training3', ' ', ...
+                     'training4', ' ','validation', ' ');
+    sMatrix.training1 = cell(27744, 4);
+    sMatrix.training2 = cell(27744, 4);
+    sMatrix.training3 = cell(27744, 4);
+    sMatrix.training4 = cell(27744, 4);
     sMatrix.validation = cell(27744, 4);
+    sTrain = {'training1', 'training2', 'training3', 'training4'}
+    
+    % Get the output from the command line
+    diary off
+    diaryFileName = ['/home/labuser/data/megFingerprinting/output/pca_output/' SubjectNames{iSubject} '_pca_output.txt' ];
+    diary(diaryFileName)
+    times_start = [5, 35, 65, 95, 125]
+    times_end = [35, 65, 95, 125, 155]
+    
+    for iTrainMatrix = 1:4
+        for iFOI = 1:nFOI
+            
+            fprintf(['Now calculating matrix for training set ' num2str(iTrainMatrix) ' at ' sFOI_names{iFOI} ' frequency band\n']);
+            
+            % Process: AEC NxN for training sets
+            sSources.(sTrain{iTrainMatrix}).(sFOI_names{iFOI}) = bst_process('CallProcess', 'process_aec1n', ...
+                sSources.(sFOI_names{iFOI}).FileName, [], ...
+                'timewindow', [times_start(iTrainMatrix), times_end(iTrainMatrix)], ...
+                'scouts',     {'Desikan-Killiany', {'bankssts L', 'bankssts R', 'caudalanteriorcingulate L', 'caudalanteriorcingulate R', 'caudalmiddlefrontal L', 'caudalmiddlefrontal R', 'cuneus L', 'cuneus R', 'entorhinal L', 'entorhinal R', 'frontalpole L', 'frontalpole R', 'fusiform L', 'fusiform R', 'inferiorparietal L', 'inferiorparietal R', 'inferiortemporal L', 'inferiortemporal R', 'insula L', 'insula R', 'isthmuscingulate L', 'isthmuscingulate R', 'lateraloccipital L', 'lateraloccipital R', 'lateralorbitofrontal L', 'lateralorbitofrontal R', 'lingual L', 'lingual R', 'medialorbitofrontal L', 'medialorbitofrontal R', 'middletemporal L', 'middletemporal R', 'paracentral L', 'paracentral R', 'parahippocampal L', 'parahippocampal R', 'parsopercularis L', 'parsopercularis R', 'parsorbitalis L', 'parsorbitalis R', 'parstriangularis L', 'parstriangularis R', 'pericalcarine L', 'pericalcarine R', 'postcentral L', 'postcentral R', 'posteriorcingulate L', 'posteriorcingulate R', 'precentral L', 'precentral R', 'precuneus L', 'precuneus R', 'rostralanteriorcingulate L', 'rostralanteriorcingulate R', 'rostralmiddlefrontal L', 'rostralmiddlefrontal R', 'superiorfrontal L', 'superiorfrontal R', 'superiorparietal L', 'superiorparietal R', 'superiortemporal L', 'superiortemporal R', 'supramarginal L', 'supramarginal R', 'temporalpole L', 'temporalpole R', 'transversetemporal L', 'transversetemporal R'}}, ...
+                'scoutfunc',  3, ...  % PCA
+                'scouttime',  1, ...  % Before
+                'freqbands',  {sFOI_names{iFOI}, [num2str(filter_low.([sFOI_names{iFOI} 'Low'])) ',' num2str(filter_high.([sFOI_names{iFOI} 'High']))], 'mean'}, ...
+                'isorth',     0, ...
+                'outputmode', 1); % Save individual results (one file per input file)
+            
+            % Process: Add tag
+            sSources.(sTrain{iTrainMatrix}).(sFOI_names{iFOI}) = bst_process('CallProcess', 'process_add_tag', ...
+                sSources.(sTrain{iTrainMatrix}).(sFOI_names{iFOI}).FileName , [], ...
+                'tag',    ['training' num2str(iTrainMatrix) '_'  sFOI_names{iFOI}], ...
+                'output', 2);  % Add to file name
+            
+            % Load Training Matrix
+            tMatrix = load(file_fullpath(sSources.(sTrain{iTrainMatrix}).(sFOI_names{iFOI}).FileName));
+            
+            % Unload values unto big matrix file
+            n = 1;
+            for iSource=1:numel(tMatrix.RowNames)
+                for iTarget=1:numel(tMatrix.RowNames)
+                    sMatrix.(sTrain{iTrainMatrix}){n + (iFOI-1)*(4624), 1} = tMatrix.RowNames(iSource);
+                    sMatrix.(sTrain{iTrainMatrix}){n + (iFOI-1)*(4624), 2} = tMatrix.RowNames(iTarget);
+                    sMatrix.(sTrain{iTrainMatrix}){n + (iFOI-1)*(4624), 3} = tMatrix.TF(n);
+                    sMatrix.(sTrain{iTrainMatrix}){n + (iFOI-1)*(4624), 4} = sFOI_names{iFOI};
+                    n = n+1;
+                end
+            end
+            
+            % Copy the matrix to outputs
+            source = file_fullpath(sSources.(sTrain{iTrainMatrix}).(sFOI_names{iFOI}).FileName);
+            destination = ['/home/labuser/data/megFingerprinting/output/30s_bst_matrices/' SubjectNames{iSubject} '_aecMatrix_training' num2str(iTrainMatrix) '_' sFOI_names{iFOI} '.mat'];
+            copyfile(source, destination)
+        end
+    end
     
     for iFOI = 1:nFOI
-        
-        % Get the output from the command line
-        diary off
-        diaryFileName = ['/home/labuser/data/megFingerprinting/output/pca_output/' SubjectNames{iSubject} '_' sFOI_names{iFOI} '_pca_output.txt' ];
-        diary(diaryFileName)
-        
-        % Process: AEC NxN for training set
-        sSources.training.(sFOI_names{iFOI}) = bst_process('CallProcess', 'process_aec1n', ...
-            sSources.(sFOI_names{iFOI}).FileName, [], ...
-            'timewindow', [(5), (floor((sTime.Time(end))/2))], ...
-            'scouts',     {'Desikan-Killiany', {'bankssts L', 'bankssts R', 'caudalanteriorcingulate L', 'caudalanteriorcingulate R', 'caudalmiddlefrontal L', 'caudalmiddlefrontal R', 'cuneus L', 'cuneus R', 'entorhinal L', 'entorhinal R', 'frontalpole L', 'frontalpole R', 'fusiform L', 'fusiform R', 'inferiorparietal L', 'inferiorparietal R', 'inferiortemporal L', 'inferiortemporal R', 'insula L', 'insula R', 'isthmuscingulate L', 'isthmuscingulate R', 'lateraloccipital L', 'lateraloccipital R', 'lateralorbitofrontal L', 'lateralorbitofrontal R', 'lingual L', 'lingual R', 'medialorbitofrontal L', 'medialorbitofrontal R', 'middletemporal L', 'middletemporal R', 'paracentral L', 'paracentral R', 'parahippocampal L', 'parahippocampal R', 'parsopercularis L', 'parsopercularis R', 'parsorbitalis L', 'parsorbitalis R', 'parstriangularis L', 'parstriangularis R', 'pericalcarine L', 'pericalcarine R', 'postcentral L', 'postcentral R', 'posteriorcingulate L', 'posteriorcingulate R', 'precentral L', 'precentral R', 'precuneus L', 'precuneus R', 'rostralanteriorcingulate L', 'rostralanteriorcingulate R', 'rostralmiddlefrontal L', 'rostralmiddlefrontal R', 'superiorfrontal L', 'superiorfrontal R', 'superiorparietal L', 'superiorparietal R', 'superiortemporal L', 'superiortemporal R', 'supramarginal L', 'supramarginal R', 'temporalpole L', 'temporalpole R', 'transversetemporal L', 'transversetemporal R'}}, ...
-            'scoutfunc',  3, ...  % PCA
-            'scouttime',  1, ...  % Before
-            'freqbands',  {sFOI_names{iFOI}, [num2str(filter_low.([sFOI_names{iFOI} 'Low'])) ',' num2str(filter_high.([sFOI_names{iFOI} 'High']))], 'mean'}, ...
-            'isorth',     0, ...
-            'outputmode', 1); % Save individual results (one file per input file)
-        
-        % Process: Add tag
-        sSources.training.(sFOI_names{iFOI}) = bst_process('CallProcess', 'process_add_tag', ...
-            sSources.training.(sFOI_names{iFOI}).FileName, [], ...
-            'tag',    ['training_' sFOI_names{iFOI}], ...
-            'output', 2);  % Add to file name
-        
-        % Load Training Matrix
-        tMatrix = load(file_fullpath(sSources.training.(sFOI_names{iFOI}).FileName));
-        
-        % Unload values unto big matrix file
-        n = 1;
-        for iSource=1:numel(tMatrix.RowNames)
-            for iTarget=1:numel(tMatrix.RowNames)
-                sMatrix.training{n + (iFOI-1)*(4624), 1} = tMatrix.RowNames(iSource);
-                sMatrix.training{n + (iFOI-1)*(4624), 2} = tMatrix.RowNames(iTarget);
-                sMatrix.training{n + (iFOI-1)*(4624), 3} = tMatrix.TF(n);
-                sMatrix.training{n + (iFOI-1)*(4624), 4} = sFOI_names{iFOI};
-                n = n+1;
-            end
-        end
-        
-        % Copy the matrix to outputs
-        source = file_fullpath(sSources.training.(sFOI_names{iFOI}).FileName);
-        destination = ['/home/labuser/data/megFingerprinting/output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_training_' sFOI_names{iFOI} '.mat']
-        copyfile(source, destination)
-        db_reload_database('current')
-        
         % Process: AEC NxN for validation set
         sSources.validation.(sFOI_names{iFOI}) = bst_process('CallProcess', 'process_aec1n', ...
             sSources.(sFOI_names{iFOI}).FileName, [], ...
-            'timewindow', [ceil((sTime.Time(end))/2), (sTime.Time(end) - 5)], ...
+            'timewindow', [(sTime.Time(end) - 40), (sTime.Time(end) - 10)], ...
             'scouts',     {'Desikan-Killiany', {'bankssts L', 'bankssts R', 'caudalanteriorcingulate L', 'caudalanteriorcingulate R', 'caudalmiddlefrontal L', 'caudalmiddlefrontal R', 'cuneus L', 'cuneus R', 'entorhinal L', 'entorhinal R', 'frontalpole L', 'frontalpole R', 'fusiform L', 'fusiform R', 'inferiorparietal L', 'inferiorparietal R', 'inferiortemporal L', 'inferiortemporal R', 'insula L', 'insula R', 'isthmuscingulate L', 'isthmuscingulate R', 'lateraloccipital L', 'lateraloccipital R', 'lateralorbitofrontal L', 'lateralorbitofrontal R', 'lingual L', 'lingual R', 'medialorbitofrontal L', 'medialorbitofrontal R', 'middletemporal L', 'middletemporal R', 'paracentral L', 'paracentral R', 'parahippocampal L', 'parahippocampal R', 'parsopercularis L', 'parsopercularis R', 'parsorbitalis L', 'parsorbitalis R', 'parstriangularis L', 'parstriangularis R', 'pericalcarine L', 'pericalcarine R', 'postcentral L', 'postcentral R', 'posteriorcingulate L', 'posteriorcingulate R', 'precentral L', 'precentral R', 'precuneus L', 'precuneus R', 'rostralanteriorcingulate L', 'rostralanteriorcingulate R', 'rostralmiddlefrontal L', 'rostralmiddlefrontal R', 'superiorfrontal L', 'superiorfrontal R', 'superiorparietal L', 'superiorparietal R', 'superiortemporal L', 'superiortemporal R', 'supramarginal L', 'supramarginal R', 'temporalpole L', 'temporalpole R', 'transversetemporal L', 'transversetemporal R'}}, ...
             'scoutfunc',  3, ...  % PCA
             'scouttime',  1, ...  % Before
@@ -796,17 +864,18 @@ for iSubject=43:nSubjects
         
         % Copy the matrix to outputs
         source = file_fullpath(sSources.validation.(sFOI_names{iFOI}).FileName);
-        destination = ['/home/labuser/data/megFingerprinting/output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_validation_' sFOI_names{iFOI} '.mat']
+        destination = ['/home/labuser/data/megFingerprinting/output/30s_bst_matrices/' SubjectNames{iSubject} '_aecMatrix_validation_' sFOI_names{iFOI} '.mat']
         copyfile(source, destination)
-        db_reload_database('current')
     end
+    db_reload_database('current')
     
     %% == 16) Output CSV file ====================
-    % Training set
-    datei = fopen(['/home/labuser/data/megFingerprinting/output/csv_matrices/' SubjectNames{iSubject} '_aecMatrix_training.csv'], 'w');
-    for z=1:size(sMatrix.training, 1)
-        for s=1:size(sMatrix.training, 2)
-            var = sMatrix.training{z,s};
+    % Training sets
+    for iTrainMatrix = 1:4 
+    datei = fopen(['/home/labuser/data/megFingerprinting/output/30s_csv_matrices/' SubjectNames{iSubject} '_aecMatrix_training' num2str(iTrainMatrix) '.csv'], 'w');
+    for z=1:size(sMatrix.(sTrain{iTrainMatrix}), 1)
+        for s=1:size(sMatrix.(sTrain{iTrainMatrix}), 2)
+            var = sMatrix.(sTrain{iTrainMatrix}){z,s};
             
             % If cell, get the contents
             if iscell(var)
@@ -827,20 +896,21 @@ for iSubject=43:nSubjects
             fprintf(datei, '%s', var);
             
             % OUTPUT separator
-            if s ~= size(sMatrix.training, 2)
+            if s ~= size(sMatrix.(sTrain{iTrainMatrix}), 2)
                 fprintf(datei, ',');
             end
         end
-        if z ~= size(sMatrix.training, 1) % prevent a empty line at EOF
+        if z ~= size(sMatrix.(sTrain{iTrainMatrix}), 1) % prevent a empty line at EOF
             % OUTPUT newline
             fprintf(datei, '\n');
         end
     end
     % Closing file
     fclose(datei);
+    end
     
     %% Validation set
-    datei = fopen(['/home/labuser/data/megFingerprinting/output/csv_matrices/' SubjectNames{iSubject} '_aecMatrix_validation.csv'], 'w');
+    datei = fopen(['/home/labuser/data/megFingerprinting/output/30s_csv_matrices/' SubjectNames{iSubject} '_aecMatrix_validation.csv'], 'w');
     for z=1:size(sMatrix.validation, 1)
         for s=1:size(sMatrix.validation, 2)
             var = sMatrix.validation{z,s};
