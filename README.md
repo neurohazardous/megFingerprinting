@@ -1,16 +1,16 @@
 ## License  
 This file is part of the project megFingerprinting. All of megFingerprinting code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. megFingerprinting is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with megFingerprinting. If not, see <https://www.gnu.org/licenses/>.
 
-## Project Status
-On going - Currently building the neural network
+## Status
+On going - Currently building the neural network and experimenting with other, more simple algorithms
 
 ## Objective
-To identify people based on patterns of brain connectivity (as indexed by  MEG) using Deep Learning
+To identify people based on patterns of brain connectivity (as indexed by  MEG) using Deep Learning 
 
 ## Supervisors
 [Dr Bratislav Misic](https://www.mcgill.ca/neuro/research/researchers/bratislav-misic) and [Dr Sylvain Baillet](https://www.mcgill.ca/neuro/research/researchers/baillet) at the Montreal Neurological Institute
 
-## The Dataset  
+## Dataset  
 For this project we've been using [OMEGA](https://www.mcgill.ca/bic/resources/omega). The Open MEG Archive (OMEGA) is the fruit of a collaborative effort between the McConnell Brain Imaging Centre (MNI, McGill) and the Université de Montréal to provide a core repository of MEG data for open dissemination.
 
 ## Contents
