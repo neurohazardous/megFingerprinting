@@ -53,4 +53,7 @@ For this project we've been using [OMEGA](https://www.mcgill.ca/bic/resources/om
 * This Jupyter notebook helps you visualize specific subject's connectivity matrices (select subject, frequency band, and what matrix to visualize in the second box)
 
 ### 4-meg_identification.ipynb
-* The classifier
+* The Artificial Neural Network, as of now, it performs at chance level
+
+### 5-meg_pca_corr.ipynb
+* We tried a different thing: reduce the dimensions of the feature space and try simple correlations. So far, we have an accuracy of over 60%
