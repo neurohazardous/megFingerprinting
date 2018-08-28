@@ -1,15 +1,15 @@
 %% == License ==========================================================
-% This file is part of the project megFingerprinting. All of 
-% megFingerprinting code is free software: you can redistribute 
-% it and/or modify it under the terms of the GNU General Public License as 
-% published by the Free Software Foundation, 
-% either version 3 of the License, or (at your option) any later version. 
-% megFingerprinting is distributed in the hope that it will be useful, but 
-% WITHOUT ANY WARRANTY; without even the 
-% implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
-% See the GNU General Public License for 
-% more details. You should have received a copy of the GNU General Public 
-% License along with megFingerprinting. 
+% This file is part of the project megFingerprinting. All of
+% megFingerprinting code is free software: you can redistribute
+% it and/or modify it under the terms of the GNU General Public License as
+% published by the Free Software Foundation,
+% either version 3 of the License, or (at your option) any later version.
+% megFingerprinting is distributed in the hope that it will be useful, but
+% WITHOUT ANY WARRANTY; without even the
+% implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+% See the GNU General Public License for
+% more details. You should have received a copy of the GNU General Public
+% License along with megFingerprinting.
 % If not, see <https://www.gnu.org/licenses/>.
 
 %% == omMachina: OMEGA Preprocessing ==================================
@@ -104,12 +104,22 @@ SubjectNames = {sSubjects.Subject.Name}';
 %% == 2) Import subject's anatomy =======================================
 % Because I am using OMEGA reconstructed anatomy (from the preprocessed
 % version), we need to copy the files manually to the database (these are
-% downloaded with the bash script)
+% downloaded with the bash script). I start at the end because when using
+% the delete_subject brainstorm function this updates automatically the
+% database, so starting at the end will not fuck up the indexes of the
+% subjects even when deleting some of them
 
-for iSubject=1:(numel(SubjectNames)-1)
-    source = ['../data/megFingerprinting/data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat']
-    destination = ['../data/brainstorm_db/omMachina/anat/' SubjectNames{iSubject}]
-    copyfile(source, destination)
+for iSubject=(numel(SubjectNames)-1):-1:1
+    fold_bool = exist(['../data/megFingerprinting/data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat']);
+    anat_file_bool = exist(['../data/megFingerprinting/data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat/subjectimage_T1.mat']);
+    if fold_bool == 7 & anat_file_bool == 2
+    source = ['../data/megFingerprinting/data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat'];
+    destination = ['../data/brainstorm_db/omMachina/anat/' SubjectNames{iSubject}];
+    copyfile(source, destination);
+    else
+        fprintf([SubjectNames{iSubject} ' has no processed anatomy and will be deleted!'])
+        db_delete_subjects(iSubject)
+    end 
 end
 db_reload_database('current')
 
@@ -137,7 +147,8 @@ sSubjects = bst_get('ProtocolSubjects');
 SubjectNames = {sSubjects.Subject.Name}';
 nSubjects = (numel(SubjectNames)-1);
 
-for iSubject=1:nSubjects
+
+for iSubject=64:nSubjects
     tic
     % Start a new report
     reportName = [SubjectNames{iSubject} '_report'];
@@ -158,23 +169,23 @@ for iSubject=1:nSubjects
         'tag', 'baselineresting', ...
         'search', 1, ...
         'select', 1);  % Select only the files with the tag
-
+    
     % Process: If there is no baseline resting, analyze post-experiment
     % baseline
     if isempty(sData)
         sData = bst_process('CallProcess', 'process_select_files_data', ...
-        [], [], 'subjectname',   SubjectNames{iSubject});
-    
+            [], [], 'subjectname',   SubjectNames{iSubject});
+        
         sData = bst_process('CallProcess', 'process_select_tag', ...
-        sData, [], ...
-        'tag', 'restingaftertask', ...
-        'search', 1, ...
-        'select', 1);  % Select only the files with the tag
-    
+            sData, [], ...
+            'tag', 'restingaftertask', ...
+            'search', 1, ...
+            'select', 1);  % Select only the files with the tag
+        
         sData = sData(1);
-    else 
+    else
         sData = sData(1);
-    end 
+    end
     
     % Process: Convert to continuous (CTF): Continuous
     cont_bool = load(file_fullpath(sData.FileName), 'F');
@@ -185,38 +196,38 @@ for iSubject=1:nSubjects
     end
     
     % Sometimes the files are not continous but they only contain one long
-    % epoch. This bit controls for that 
+    % epoch. This bit controls for that
     if isempty(sData)
         if time_bool.Time(2) > 2
-       % Process: select data
-    sData = bst_process('CallProcess', 'process_select_files_data', ...
-        [], [], 'subjectname',   SubjectNames{iSubject});
-    
-    sData = bst_process('CallProcess', 'process_select_tag', ...
-        sData, [], ...
-        'tag', 'baselineresting', ...
-        'search', 1, ...
-        'select', 1);  % Select only the files with the tag
-        end 
-    end 
+            % Process: select data
+            sData = bst_process('CallProcess', 'process_select_files_data', ...
+                [], [], 'subjectname',   SubjectNames{iSubject});
+            
+            sData = bst_process('CallProcess', 'process_select_tag', ...
+                sData, [], ...
+                'tag', 'baselineresting', ...
+                'search', 1, ...
+                'select', 1);  % Select only the files with the tag
+        end
+    end
     
     % Process: If there is no baseline resting, analyze post-experiment
     % baseline
     if isempty(sData)
         sData = bst_process('CallProcess', 'process_select_files_data', ...
-        [], [], 'subjectname',   SubjectNames{iSubject});
-    
+            [], [], 'subjectname',   SubjectNames{iSubject});
+        
         sData = bst_process('CallProcess', 'process_select_tag', ...
-        sData, [], ...
-        'tag', 'restingaftertask', ...
-        'search', 1, ...
-        'select', 1);  % Select only the files with the tag
+            sData, [], ...
+            'tag', 'restingaftertask', ...
+            'search', 1, ...
+            'select', 1);  % Select only the files with the tag
+        
+        sData = sData(1);
+    else
+        sData = sData(1);
+    end
     
-        sData = sData(1);
-    else 
-        sData = sData(1);
-    end 
-
     
     
     % Process: Refine registration
@@ -234,15 +245,15 @@ for iSubject=1:nSubjects
     % baseline
     if isempty(sFilesR)
         sFilesR = bst_process('CallProcess', 'process_select_tag', ...
-        sRefined, [], ...
-        'tag', 'restingaftertask', ... % Differentiate from other files
-        'search', 1, ... % 1: Filename, 2: Comments
-        'select', 1);  % Select only the files with the tag
-    
+            sRefined, [], ...
+            'tag', 'restingaftertask', ... % Differentiate from other files
+            'search', 1, ... % 1: Filename, 2: Comments
+            'select', 1);  % Select only the files with the tag
+        
         sFilesR = sFilesR(1);
-    else 
+    else
         sFilesR = sFilesR(1);
-    end 
+    end
     
     % Process: Snapshot of Sensors/MRI registration (goes into report)
     bst_process('CallProcess', 'process_snapshot', ...
@@ -323,15 +334,15 @@ for iSubject=1:nSubjects
     % baseline
     if isempty(sFilesRESTING)
         sFilesRESTING = bst_process('CallProcess', 'process_select_tag', ...
-        sFilesMEG, [], ...
-        'tag', 'restingaftertask', ... % Differentiate from other files
-        'search', 1, ... % 1: Filename, 2: Comments
-        'select', 1);  % Select only the files with the tag
-    
+            sFilesMEG, [], ...
+            'tag', 'restingaftertask', ... % Differentiate from other files
+            'search', 1, ... % 1: Filename, 2: Comments
+            'select', 1);  % Select only the files with the tag
+        
         sFilesRESTING = sFilesRESTING(1);
-    else 
+    else
         sFilesRESTING = sFilesRESTING(1);
-    end 
+    end
     
     % SSP detect and remove blinks per run
     for iRun=1:numel(sFilesRESTING)
@@ -473,7 +484,7 @@ for iSubject=1:nSubjects
     % Process: find the empty room recordings closest to this date
     temp_date = load(['/home/labuser/data/brainstorm_db/omMachina/data/' sData.FileName]);
     sub_date = [datetime(temp_date.F.header.res4.data_date, 'InputFormat', 'dd-MM-yyyy')];
-    [~, ind1] = min(abs(datenum(unique(noiseDates)) - datenum(sub_date)));
+    [~, ind1] = min(abs(datenum(noiseDates) - datenum(sub_date)));
     sub_noise = noiseDates(ind1, :);
     sub_noise = string(datestr(sub_noise, 'yyyymmdd'));
     
@@ -483,9 +494,11 @@ for iSubject=1:nSubjects
         'tag', sub_noise, ...
         'search', 1, ...
         'select', 1);  % Select only the files with the tag
+    
     if ~(numel(sSubNoise) == 1)
         sSubNoise = sSubNoise(1);
     end
+    
     
     % Preprocess empty room recording!
     % Process: Convert to continuous (CTF): Continuous
@@ -497,16 +510,16 @@ for iSubject=1:nSubjects
     end
     
     % Sometimes the files are not continous but they only contain one long
-    % epoch. This bit controls for that 
+    % epoch. This bit controls for that
     if isempty(sSubNoise)
         if time_bool.Time(2) > 2
-        sSubNoise = bst_process('CallProcess', 'process_select_tag', ...
-            sNoise, [], ...
-            'tag', sub_noise, ...
-            'search', 1, ...
-            'select', 1);  % Select only the files with the tag
-        end 
-    end 
+            sSubNoise = bst_process('CallProcess', 'process_select_tag', ...
+                sNoise, [], ...
+                'tag', sub_noise, ...
+                'search', 1, ...
+                'select', 1);  % Select only the files with the tag
+        end
+    end
     
     
     
@@ -732,16 +745,21 @@ for iSubject=1:nSubjects
     sSources = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
         'beta', ' ', 'gamma', ' ', 'hgamma', ' ', 'validation', ' ', ...
         'training', '');
-    sSources.training1 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
-        'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
-    sSources.training2 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
-        'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
-    sSources.training3 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
-        'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
-    sSources.training4 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
+    sSources.training = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
         'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
     sSources.validation = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
         'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
+    
+    %     sSources.training1 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
+    %         'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
+    %     sSources.training2 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
+    %         'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
+    %     sSources.training3 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
+    %         'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
+    %     sSources.training4 = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
+    %         'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
+    %     sSources.validation = struct('delta', ' ', 'theta', ' ', 'alpha', ' ', ...
+    %         'beta', ' ', 'gamma', ' ', 'hgamma', ' ');
     
     for iFOI = 1:nFOI
         sSources.(sFOI_names{iFOI}) = bst_process('CallProcess', 'process_select_files_results', ...
@@ -764,6 +782,174 @@ for iSubject=1:nSubjects
             'threshold',      15, ...
             'Comment',    sFOI_names{iFOI});
     end
+    %% == 15) Amplitude Envelope Correlation =============================
+    sMatrix = struct('training', ' ', 'validation', ' ');
+    sMatrix.training = cell(27744, 4);
+    sMatrix.validation = cell(27744, 4);
+    
+    for iFOI = 1:nFOI
+        
+        % Get the output from the command line
+        diary off
+        diaryFileName = ['/home/labuser/data/megFingerprinting/output/pca_output/' SubjectNames{iSubject} '_' sFOI_names{iFOI} '_pca_output.txt' ];
+        diary(diaryFileName)
+        
+        % Process: AEC NxN for training set
+        sSources.training.(sFOI_names{iFOI}) = bst_process('CallProcess', 'process_aec1n', ...
+            sSources.(sFOI_names{iFOI}).FileName, [], ...
+            'timewindow', [(5), (floor((sTime.Time(end))/2))], ...
+            'scouts',     {'Desikan-Killiany', {'bankssts L', 'bankssts R', 'caudalanteriorcingulate L', 'caudalanteriorcingulate R', 'caudalmiddlefrontal L', 'caudalmiddlefrontal R', 'cuneus L', 'cuneus R', 'entorhinal L', 'entorhinal R', 'frontalpole L', 'frontalpole R', 'fusiform L', 'fusiform R', 'inferiorparietal L', 'inferiorparietal R', 'inferiortemporal L', 'inferiortemporal R', 'insula L', 'insula R', 'isthmuscingulate L', 'isthmuscingulate R', 'lateraloccipital L', 'lateraloccipital R', 'lateralorbitofrontal L', 'lateralorbitofrontal R', 'lingual L', 'lingual R', 'medialorbitofrontal L', 'medialorbitofrontal R', 'middletemporal L', 'middletemporal R', 'paracentral L', 'paracentral R', 'parahippocampal L', 'parahippocampal R', 'parsopercularis L', 'parsopercularis R', 'parsorbitalis L', 'parsorbitalis R', 'parstriangularis L', 'parstriangularis R', 'pericalcarine L', 'pericalcarine R', 'postcentral L', 'postcentral R', 'posteriorcingulate L', 'posteriorcingulate R', 'precentral L', 'precentral R', 'precuneus L', 'precuneus R', 'rostralanteriorcingulate L', 'rostralanteriorcingulate R', 'rostralmiddlefrontal L', 'rostralmiddlefrontal R', 'superiorfrontal L', 'superiorfrontal R', 'superiorparietal L', 'superiorparietal R', 'superiortemporal L', 'superiortemporal R', 'supramarginal L', 'supramarginal R', 'temporalpole L', 'temporalpole R', 'transversetemporal L', 'transversetemporal R'}}, ...
+            'scoutfunc',  3, ...  % PCA
+            'scouttime',  1, ...  % Before
+            'freqbands',  {sFOI_names{iFOI}, [num2str(filter_low.([sFOI_names{iFOI} 'Low'])) ',' num2str(filter_high.([sFOI_names{iFOI} 'High']))], 'mean'}, ...
+            'isorth',     0, ...
+            'outputmode', 1); % Save individual results (one file per input file)
+        
+        % Process: Add tag
+        sSources.training.(sFOI_names{iFOI}) = bst_process('CallProcess', 'process_add_tag', ...
+            sSources.training.(sFOI_names{iFOI}).FileName, [], ...
+            'tag',    ['training_' sFOI_names{iFOI}], ...
+            'output', 2);  % Add to file name
+        
+        % Load Training Matrix
+        tMatrix = load(file_fullpath(sSources.training.(sFOI_names{iFOI}).FileName));
+        
+        % Unload values unto big matrix file
+        n = 1;
+        for iSource=1:numel(tMatrix.RowNames)
+            for iTarget=1:numel(tMatrix.RowNames)
+                sMatrix.training{n + (iFOI-1)*(4624), 1} = tMatrix.RowNames(iSource);
+                sMatrix.training{n + (iFOI-1)*(4624), 2} = tMatrix.RowNames(iTarget);
+                sMatrix.training{n + (iFOI-1)*(4624), 3} = tMatrix.TF(n);
+                sMatrix.training{n + (iFOI-1)*(4624), 4} = sFOI_names{iFOI};
+                n = n+1;
+            end
+        end
+        % Copy the matrix to outputs
+        source = file_fullpath(sSources.training.(sFOI_names{iFOI}).FileName);
+        destination = ['/home/labuser/data/megFingerprinting/output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_training_' sFOI_names{iFOI} '.mat']
+        copyfile(source, destination)
+        
+        % Process: AEC NxN for validation set
+        sSources.validation.(sFOI_names{iFOI}) = bst_process('CallProcess', 'process_aec1n', ...
+            sSources.(sFOI_names{iFOI}).FileName, [], ...
+            'timewindow', [ceil((sTime.Time(end))/2), (sTime.Time(end) - 5)], ...
+            'scouts',     {'Desikan-Killiany', {'bankssts L', 'bankssts R', 'caudalanteriorcingulate L', 'caudalanteriorcingulate R', 'caudalmiddlefrontal L', 'caudalmiddlefrontal R', 'cuneus L', 'cuneus R', 'entorhinal L', 'entorhinal R', 'frontalpole L', 'frontalpole R', 'fusiform L', 'fusiform R', 'inferiorparietal L', 'inferiorparietal R', 'inferiortemporal L', 'inferiortemporal R', 'insula L', 'insula R', 'isthmuscingulate L', 'isthmuscingulate R', 'lateraloccipital L', 'lateraloccipital R', 'lateralorbitofrontal L', 'lateralorbitofrontal R', 'lingual L', 'lingual R', 'medialorbitofrontal L', 'medialorbitofrontal R', 'middletemporal L', 'middletemporal R', 'paracentral L', 'paracentral R', 'parahippocampal L', 'parahippocampal R', 'parsopercularis L', 'parsopercularis R', 'parsorbitalis L', 'parsorbitalis R', 'parstriangularis L', 'parstriangularis R', 'pericalcarine L', 'pericalcarine R', 'postcentral L', 'postcentral R', 'posteriorcingulate L', 'posteriorcingulate R', 'precentral L', 'precentral R', 'precuneus L', 'precuneus R', 'rostralanteriorcingulate L', 'rostralanteriorcingulate R', 'rostralmiddlefrontal L', 'rostralmiddlefrontal R', 'superiorfrontal L', 'superiorfrontal R', 'superiorparietal L', 'superiorparietal R', 'superiortemporal L', 'superiortemporal R', 'supramarginal L', 'supramarginal R', 'temporalpole L', 'temporalpole R', 'transversetemporal L', 'transversetemporal R'}}, ...
+            'scoutfunc',  3, ...  % PCA
+            'scouttime',  1, ...  % Before
+            'freqbands',  {sFOI_names{iFOI}, [num2str(filter_low.([sFOI_names{iFOI} 'Low'])) ',' num2str(filter_high.([sFOI_names{iFOI} 'High']))], 'mean'}, ...
+            'isorth',     0, ...
+            'outputmode', 1);  % Save individual results (one file per input file)
+        
+        % Stop output of Command Window
+        diary off
+        
+        % Process: Add tag
+        sSources.validation.(sFOI_names{iFOI}) = bst_process('CallProcess', 'process_add_tag', ...
+            sSources.validation.(sFOI_names{iFOI}).FileName, [], ...
+            'tag',    ['validation_' sFOI_names{iFOI}], ...
+            'output', 2);  % Add to file name
+        
+        % Load Validation Matrix
+        vMatrix = load(file_fullpath(sSources.validation.(sFOI_names{iFOI}).FileName))
+        
+        % Unload values unto big matrix file
+        n = 1;
+        for iSource=1:numel(vMatrix.RowNames)
+            for iTarget=1:numel(vMatrix.RowNames)
+                sMatrix.validation{n + (iFOI-1)*(4624), 1} = vMatrix.RowNames(iSource);
+                sMatrix.validation{n + (iFOI-1)*(4624), 2} = vMatrix.RowNames(iTarget);
+                sMatrix.validation{n + (iFOI-1)*(4624), 3} = vMatrix.TF(n);
+                sMatrix.validation{n + (iFOI-1)*(4624), 4} = sFOI_names{iFOI};
+                n = n+1;
+            end
+        end
+        
+        % Copy the matrix to outputs
+        source = file_fullpath(sSources.validation.(sFOI_names{iFOI}).FileName);
+        destination = ['/home/labuser/data/megFingerprinting/output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_validation_' sFOI_names{iFOI} '.mat']
+        copyfile(source, destination)  
+    end
+    db_reload_database('current')
+    
+    %% == 16) Output CSV file ====================
+    % Training set
+    datei = fopen(['/home/labuser/data/megFingerprinting/output/csv_matrices/' SubjectNames{iSubject} '_aecMatrix_training.csv'], 'w');
+    for z=1:size(sMatrix.training, 1)
+        for s=1:size(sMatrix.training, 2)
+            var = sMatrix.training{z,s};
+            
+            % If cell, get the contents
+            if iscell(var)
+                var = var{1};
+            end
+            
+            % If zero, then empty cell
+            if size(var, 1) == 0
+                var = 0;
+            end
+            
+            % If numeric -> String
+            if isnumeric(var)
+                var = num2str(var);
+            end
+            
+            % OUTPUT value
+            fprintf(datei, '%s', var);
+            
+            % OUTPUT separator
+            if s ~= size(sMatrix.training, 2)
+                fprintf(datei, ',');
+            end
+        end
+        if z ~= size(sMatrix.training, 1) % prevent a empty line at EOF
+            % OUTPUT newline
+            fprintf(datei, '\n');
+        end
+    end
+    % Closing file
+    fclose(datei);
+    
+    %% Validation set
+    datei = fopen(['/home/labuser/data/megFingerprinting/output/csv_matrices/' SubjectNames{iSubject} '_aecMatrix_validation.csv'], 'w');
+    for z=1:size(sMatrix.validation, 1)
+        for s=1:size(sMatrix.validation, 2)
+            var = sMatrix.validation{z,s};
+            
+            % If cell, get the contents
+            if iscell(var)
+                var = var{1};
+            end
+            
+            % If zero, then empty cell
+            if size(var, 1) == 0
+                var = 0;
+            end
+            
+            % If numeric -> String
+            if isnumeric(var)
+                var = num2str(var);
+            end
+            
+            % OUTPUT value
+            fprintf(datei, '%s', var);
+            
+            % OUTPUT separator
+            if s ~= size(sMatrix.validation, 2)
+                fprintf(datei, ',');
+            end
+        end
+        if z ~= size(sMatrix.validation, 1) % prevent a empty line at EOF
+            % OUTPUT newline
+            fprintf(datei, '\n');
+        end
+    end
+    % Closing file
+    fclose(datei);
+    
+    
+    %% == Uncomment the next section to get 30s chunks instead of 2:30
+    %{
     
     %% == 15) Amplitude Envelope Correlation =============================
     sMatrix = struct('training1', ' ', 'training2', ' ', 'training3', ' ', ...
@@ -871,7 +1057,7 @@ for iSubject=1:nSubjects
     
     %% == 16) Output CSV file ====================
     % Training sets
-    for iTrainMatrix = 1:4 
+    for iTrainMatrix = 1:4
     datei = fopen(['/home/labuser/data/megFingerprinting/output/30s_csv_matrices/' SubjectNames{iSubject} '_aecMatrix_training' num2str(iTrainMatrix) '.csv'], 'w');
     for z=1:size(sMatrix.(sTrain{iTrainMatrix}), 1)
         for s=1:size(sMatrix.(sTrain{iTrainMatrix}), 2)
@@ -945,6 +1131,8 @@ for iSubject=1:nSubjects
     end
     % Closing file
     fclose(datei);
+    
+    %}
     
     
     %% == 17) Output and save report =====================================
