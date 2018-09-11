@@ -49,11 +49,10 @@ For this project we've been using [OMEGA](https://www.mcgill.ca/bic/resources/om
     * Matrices (csv format)
     * Matrices (brainstorm file (.mat))
 
-### 3-matrix_visualization
-* This Jupyter notebook helps you visualize specific subject's connectivity matrices (select subject, frequency band, and what matrix to visualize in the second box)
+### 3-fingerprinting_deep_learning.ipynb
+* The Artificial Neural Network, as of now, it performs at chance level. Because of this, we decided to try other types of analysis
 
-### 4-meg_identification.ipynb
-* The Artificial Neural Network, as of now, it performs at chance level
-
-### 5-meg_pca_corr.ipynb
-* We tried a different thing: reduce the dimensions of the feature space and try simple correlations. So far, we have an accuracy of over 60%
+### 4-fingerprinting_corr_pca.ipynb
+* We used the same method as Finn et al., 2015 & Amico & Goñi, 2018, and we get an accuracy of 96% with the PCA reconstructed data
+* After that, we run edge-wise analysis to understand what connections are consistent at the group level and which ones are more important to identify individuals than others
+* Finally, we run several sanity checks (correlating identifiability with subject characteristics and artifact summary statistics & separating structural connectivity and functional connectivity)
