@@ -2,10 +2,10 @@
 This file is part of the project megFingerprinting. All of megFingerprinting code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. megFingerprinting is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with megFingerprinting. If not, see <https://www.gnu.org/licenses/>.
 
 ## Status
-On going - Currently building the neural network and experimenting with other, more simple algorithms
+On going - We have an accuracy of ~95% using linear methods (correlations) and dimensionality reduction techniques (PCA). We are currently running follow up analysis (i.e. is it really the dynamic connectivity that helps us identify people or is it a by-product of source modelling?)
 
 ## Objective
-To identify people based on patterns of brain connectivity (as indexed by  MEG) using Deep Learning 
+To identify people based on patterns of brain connectivity (as indexed by  MEG) using Deep Learning and other linear methods
 
 ## Supervisors
 [Dr Bratislav Misic](https://www.mcgill.ca/neuro/research/researchers/bratislav-misic) and [Dr Sylvain Baillet](https://www.mcgill.ca/neuro/research/researchers/baillet) at the Montreal Neurological Institute
