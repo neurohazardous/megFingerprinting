@@ -36,15 +36,15 @@
 %% == Initiate Brainstorm and protocol setup =============================
 clc; clear;
 
-cd '/home/labuser/brainstorm3'
+cd './brainstorm3'
 
 if ~brainstorm('status')
     brainstorm nogui % If brainstorm ain't running, run it with no GUI
 end
 
 % Create protocol; if it already exists, load it
-omProtocol.name = 'omMachina';
-if exist('/home/labuser/data/brainstorm_db/omMachina', 'file') == 7
+omProtocol.name = 'omMachina_3';
+if exist('./brainstorm_db/omMachina_3', 'file') == 7
     omProtocol.index = bst_get('Protocol', omProtocol.name);
     bst_set('iProtocol', omProtocol.index);
     
@@ -54,13 +54,13 @@ end
 
 %% == Parameters =========================================================
 % MEG datasets storage
-mydirMEG = '/home/labuser/data/megFingerprinting/data/OMEGA_BIDS';
+mydirMEG = './data/OMEGA_BIDS';
 
 % Dir to save progress report
-mydirBST = '/home/labuser/data/megFingerprinting/output/reports';
+mydirBST = './output/reports';
 
 % Dir of database
-mydirDB = '/home/labuser/data/brainstorm_db/omMachina/data';
+mydirDB = './data';
 
 % Frequencies to filter with the noth (power line 60Hz and harmonics)
 freqs_notch = [60, 120, 180, 240, 300, 360, 420, 480, 540, 600];
@@ -88,8 +88,8 @@ win_overlap = 50; % percentage
 
 
 % .mat files include variables to arrange the atlas into Yeo's RSN
-load('/home/labuser/data/megFingerprinting/dependencies/desikan_scale33.mat');
-load('/home/labuser/data/megFingerprinting/dependencies/rsn_mapping_yeo.mat');
+load('./dependencies/desikan_scale33.mat');
+load('./dependencies/rsn_mapping_yeo.mat');
 
 %% == 1) Import BIDS dataset =============================================
 % Import BIDS dataset - This will import all subjects in the file!
@@ -110,11 +110,11 @@ SubjectNames = {sSubjects.Subject.Name}';
 % subjects even when deleting some of them
 
 for iSubject=(numel(SubjectNames)-1):-1:1
-    fold_bool = exist(['../data/megFingerprinting/data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat']);
-    anat_file_bool = exist(['../data/megFingerprinting/data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat/subjectimage_T1.mat']);
+    fold_bool = exist(['./data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat']);
+    anat_file_bool = exist(['./data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat/subjectimage_T1.mat']);
     if fold_bool == 7 & anat_file_bool == 2
-    source = ['../data/megFingerprinting/data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat'];
-    destination = ['../data/brainstorm_db/omMachina/anat/' SubjectNames{iSubject}];
+    source = ['./data/OMEGA_BIDS/' SubjectNames{iSubject} '/ses-0001/anat'];
+    destination = ['./brainstorm_db/omMachina_3/anat/' SubjectNames{iSubject}];
     copyfile(source, destination);
     else
         fprintf([SubjectNames{iSubject} ' has no processed anatomy and will be deleted!'])
@@ -148,7 +148,7 @@ SubjectNames = {sSubjects.Subject.Name}';
 nSubjects = (numel(SubjectNames)-1);
 
 
-for iSubject=64:nSubjects
+for iSubject=20:30
     tic
     % Start a new report
     reportName = [SubjectNames{iSubject} '_report'];
@@ -226,8 +226,7 @@ for iSubject=64:nSubjects
         sData = sData(1);
     else
         sData = sData(1);
-    end
-    
+    end    
     
     
     % Process: Refine registration
@@ -482,7 +481,7 @@ for iSubject=64:nSubjects
     
     %% == 9) Preprocess empty room recordings ========================
     % Process: find the empty room recordings closest to this date
-    temp_date = load(['/home/labuser/data/brainstorm_db/omMachina/data/' sData.FileName]);
+    temp_date = load(['./brainstorm_db/omMachina_3/data/' sData.FileName]);
     sub_date = [datetime(temp_date.F.header.res4.data_date, 'InputFormat', 'dd-MM-yyyy')];
     [~, ind1] = min(abs(datenum(noiseDates) - datenum(sub_date)));
     sub_noise = noiseDates(ind1, :);
@@ -648,6 +647,7 @@ for iSubject=64:nSubjects
             {sFOI.(sFOI_names{iFOI}).FileName, ...
             sNoiseFOI.(sFOI_names{iFOI}).FileName}, [], ...
             'method',  1);  % Keep only the common channel names=> Remove all the others
+        
         sFOI.(sFOI_names{iFOI}) = sFilesTEMP(1);
         sNoiseFOI.(sFOI_names{iFOI}) = sFilesTEMP(2);
         
@@ -681,8 +681,8 @@ for iSubject=64:nSubjects
             'replacefile',    1);  % Replace
         
         % Copy subject's noise covariance
-        source = ['/home/labuser/data/brainstorm_db/omMachina/data/' SubjectNames{iSubject} '/emptyroom_' sFOI_names{iFOI} '/noisecov_full.mat'];
-        destination = ['/home/labuser/data/brainstorm_db/omMachina/data/' SubjectNames{iSubject} '/meg_' sFOI_names{iFOI} '/'];
+        source = ['./brainstorm_db/omMachina_3/data/' SubjectNames{iSubject} '/emptyroom_' sFOI_names{iFOI} '/noisecov_full.mat'];
+        destination = ['./brainstorm_db/omMachina_3/data/' SubjectNames{iSubject} '/meg_' sFOI_names{iFOI} '/'];
         copyfile(source, destination);
     end
     
@@ -791,7 +791,7 @@ for iSubject=64:nSubjects
         
         % Get the output from the command line
         diary off
-        diaryFileName = ['/home/labuser/data/megFingerprinting/output/pca_output/' SubjectNames{iSubject} '_' sFOI_names{iFOI} '_pca_output.txt' ];
+        diaryFileName = ['./output/pca_output/' SubjectNames{iSubject} '_' sFOI_names{iFOI} '_pca_output.txt' ];
         diary(diaryFileName)
         
         % Process: AEC NxN for training set
@@ -827,7 +827,7 @@ for iSubject=64:nSubjects
         end
         % Copy the matrix to outputs
         source = file_fullpath(sSources.training.(sFOI_names{iFOI}).FileName);
-        destination = ['/home/labuser/data/megFingerprinting/output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_training_' sFOI_names{iFOI} '.mat']
+        destination = ['./output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_training_' sFOI_names{iFOI} '.mat']
         copyfile(source, destination)
         
         % Process: AEC NxN for validation set
@@ -867,14 +867,14 @@ for iSubject=64:nSubjects
         
         % Copy the matrix to outputs
         source = file_fullpath(sSources.validation.(sFOI_names{iFOI}).FileName);
-        destination = ['/home/labuser/data/megFingerprinting/output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_validation_' sFOI_names{iFOI} '.mat']
+        destination = ['./output/bst_matrices/' SubjectNames{iSubject} '_aecMatrix_validation_' sFOI_names{iFOI} '.mat']
         copyfile(source, destination)  
     end
     db_reload_database('current')
     
     %% == 16) Output CSV file ====================
     % Training set
-    datei = fopen(['/home/labuser/data/megFingerprinting/output/csv_matrices/' SubjectNames{iSubject} '_aecMatrix_training.csv'], 'w');
+    datei = fopen(['./output/csv_matrices' SubjectNames{iSubject} '_aecMatrix_training.csv'], 'w');
     for z=1:size(sMatrix.training, 1)
         for s=1:size(sMatrix.training, 2)
             var = sMatrix.training{z,s};
@@ -911,7 +911,7 @@ for iSubject=64:nSubjects
     fclose(datei);
     
     %% Validation set
-    datei = fopen(['/home/labuser/data/megFingerprinting/output/csv_matrices/' SubjectNames{iSubject} '_aecMatrix_validation.csv'], 'w');
+    datei = fopen(['./output/csv_matrices' SubjectNames{iSubject} '_aecMatrix_validation.csv'], 'w');
     for z=1:size(sMatrix.validation, 1)
         for s=1:size(sMatrix.validation, 2)
             var = sMatrix.validation{z,s};
@@ -956,19 +956,18 @@ for iSubject=64:nSubjects
                      'training4', ' ','validation', ' ');
     sMatrix.training1 = cell(27744, 4);
     sMatrix.training2 = cell(27744, 4);
-    sMatrix.training3 = cell(27744, 4);
-    sMatrix.training4 = cell(27744, 4);
     sMatrix.validation = cell(27744, 4);
-    sTrain = {'training1', 'training2', 'training3', 'training4'}
+    sTrain = {'training1', 'training2', 'validation'}
     
     % Get the output from the command line
     diary off
     diaryFileName = ['/home/labuser/data/megFingerprinting/output/pca_output/' SubjectNames{iSubject} '_pca_output.txt' ];
     diary(diaryFileName)
-    times_start = [5, 35, 65, 95, 125]
-    times_end = [35, 65, 95, 125, 155]
+    times_start = [5, 35, sTime.Time(end) - 40];
+    times_end = [35, 65,sTime.Time(end) - 10];
+
     
-    for iTrainMatrix = 1:4
+    for iTrainMatrix = 1:2
         for iFOI = 1:nFOI
             
             fprintf(['Now calculating matrix for training set ' num2str(iTrainMatrix) ' at ' sFOI_names{iFOI} ' frequency band\n']);
@@ -1057,7 +1056,7 @@ for iSubject=64:nSubjects
     
     %% == 16) Output CSV file ====================
     % Training sets
-    for iTrainMatrix = 1:4
+    for iTrainMatrix = 1:2
     datei = fopen(['/home/labuser/data/megFingerprinting/output/30s_csv_matrices/' SubjectNames{iSubject} '_aecMatrix_training' num2str(iTrainMatrix) '.csv'], 'w');
     for z=1:size(sMatrix.(sTrain{iTrainMatrix}), 1)
         for s=1:size(sMatrix.(sTrain{iTrainMatrix}), 2)
@@ -1143,12 +1142,12 @@ for iSubject=64:nSubjects
     
     %% == 18) Delete intermediate files and output beamformer weights ====
     % Save Beamformer weights
-    for iFOI = 1:nFOI
-        temp_source = dir(['/home/labuser/data/brainstorm_db/omMachina/data/' SubjectNames{iSubject} '/meg_' sFOI_names{iFOI} '/results*']);
-        source = ['/home/labuser/data/brainstorm_db/omMachina/data/' SubjectNames{iSubject} '/meg_' sFOI_names{iFOI} '/' temp_source.name ];
-        destination = ['/home/labuser/data/megFingerprinting/output/beamformer_weights/' SubjectNames{iSubject} '_beamformer_weights_' sFOI_names{iFOI} '.mat'];
-        copyfile(source, destination)
-    end
+%     for iFOI = 1:nFOI
+%         temp_source = dir(['/home/labuser/data/brainstorm_db/omMachina/data/' SubjectNames{iSubject} '/meg_' sFOI_names{iFOI} '/results*']);
+%         source = ['/home/labuser/data/brainstorm_db/omMachina/data/' SubjectNames{iSubject} '/meg_' sFOI_names{iFOI} '/' temp_source.name ];
+%         destination = ['/home/labuser/data/megFingerprinting/output/beamformer_weights/' SubjectNames{iSubject} '_beamformer_weights_' sFOI_names{iFOI} '.mat'];
+%         copyfile(source, destination)
+%     end
     
     % Delete empty room recordings in subject's file
     for iFOI = 1:nFOI

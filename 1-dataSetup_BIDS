@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# License 
-# This file is part of the project megFingerprinting. All of megFingerprinting code is free software: you can redistribute 
-# it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, 
-# either version 3 of the License, or (at your option) any later version. 
-# megFingerprinting is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the 
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
-# more details. You should have received a copy of the GNU General Public License along with megFingerprinting. 
+# License
+# This file is part of the project megFingerprinting. All of megFingerprinting code is free software: you can redistribute
+# it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation,
+# either version 3 of the License, or (at your option) any later version.
+# megFingerprinting is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the
+# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+# more details. You should have received a copy of the GNU General Public License along with megFingerprinting.
 # If not, see <https://www.gnu.org/licenses/>.
 
 # Background
@@ -15,28 +15,28 @@
 # Type ./1-dataSetup_BIDS to run it
 
 # Constants
-BIC_PATH="hperez@login.bic.mni.mcgill.ca:/meg/meg2/omega/OMEGA_BIDS"
-LOCAL_PATH="/home/labuser/data/megFingerprinting/data/OMEGA_BIDS"
-BIC_PREPROC_ANAT="hperez@login.bic.mni.mcgill.ca:/meg/meg2/omega/OMEGA_BSTdb/OMEGA_BSTdb_v1/anat"
+BIC_PATH="jdscasta@login.bic.mni.mcgill.ca:/meg/meg2/omega/OMEGA_BIDS"
+LOCAL_PATH="/media/jdscasta/Jason_drive/omega_data/data/OMEGA_BIDS_2"
+BIC_PREPROC_ANAT="jdscasta@login.bic.mni.mcgill.ca:/meg/meg2/omega/OMEGA_BSTdb/OMEGA_BSTdb_v1/anat"
 
 # Create subject txt file
-ssh hperez@login.bic.mni.mcgill.ca ls -d /meg/meg2/omega/OMEGA_BIDS/sub-0* > $LOCAL_PATH/subs.txt
+ssh jdscasta@login.bic.mni.mcgill.ca ls -d /meg/meg2/omega/OMEGA_BIDS/sub-0* > $LOCAL_PATH/subs.txt
 
 # Download the extra docs from the BIC server
 scp $BIC_PATH/CHANGES.txt $BIC_PATH/dataset_description.json $BIC_PATH/NisoEtAl2015_OMEGA.pdf $BIC_PATH/OMEGA_README.pdf $BIC_PATH/participants.tsv $LOCAL_PATH
 
 # From the full subs.txt, take n people
-sed -n -e 1,100p $LOCAL_PATH/subs.txt > $LOCAL_PATH/subset_subs.txt
+sed -n -e 1,220p $LOCAL_PATH/subs.txt > $LOCAL_PATH/subset_subs.txt
 
-# Download n amount of subjects (only session 1), but only if they have anatomy data
+# Download n amount of subjects (session 1 or 2; change below to either ses-0001 to ses-0002, anatomy is in ses-0001), but only if they have anatomy data
 for sub in $( cat $LOCAL_PATH/subset_subs.txt )
 do
-    if ssh hperez@login.bic.mni.mcgill.ca [ -d ${sub}/ses-0001/anat ]; then
+    if ssh jdscasta@login.bic.mni.mcgill.ca [ -d ${sub}/ses-0001/anat ]; then
         mkdir $LOCAL_PATH/${sub:(-8)}
-        mkdir $LOCAL_PATH/${sub:(-8)}/ses-0001
-        rsync -av $BIC_PATH/${sub:(-8)}/*.json $LOCAL_PATH/${sub:(-8)}/ses-0001
-        rsync -av $BIC_PATH/${sub:(-8)}/ses-0001/meg $LOCAL_PATH/${sub:(-8)}/ses-0001
-        rsync -av $BIC_PREPROC_ANAT/${sub:(-8)}/ $LOCAL_PATH/${sub:(-8)}/ses-0001/anat
+        mkdir $LOCAL_PATH/${sub:(-8)}/ses-0002
+        rsync -av $BIC_PATH/${sub:(-8)}/*.json $LOCAL_PATH/${sub:(-8)}/ses-0002
+        rsync -av $BIC_PATH/${sub:(-8)}/ses-0002/meg $LOCAL_PATH/${sub:(-8)}/ses-0002
+        rsync -av $BIC_PREPROC_ANAT/${sub:(-8)}/ $LOCAL_PATH/${sub:(-8)}/ses-0002/anat
     else
         echo "${sub:(-8)} has no anatomy files!" >> $LOCAL_PATH/subs_noAnat.txt
     fi
