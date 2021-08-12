@@ -17,6 +17,8 @@ Both Jason da Silva and [Hector Orozco](https://www.linkedin.com/in/hectordorozc
 For this project we've been using [OMEGA](https://www.mcgill.ca/bic/resources/omega). The Open MEG Archive (OMEGA) is the fruit of a collaborative effort between the McConnell Brain Imaging Centre (MNI, McGill) and the Université de Montréal to provide a core repository of MEG data for open dissemination.
 
 ## Contents
+The codes listed below are intended to allow other researchers to preprocess, fingerprint, and plot their results on both the OMEGA dataset as well as other MEEG data
+
 ### 1-dataSetup_BIDS
 * This bash script will download the folders from the BIC server to your local computer. **You need special access for this**
     * Needs to be run from the local computer
@@ -60,6 +62,7 @@ For this project we've been using [OMEGA](https://www.mcgill.ca/bic/resources/om
 * After that, we run edge-wise analysis to understand what connections are consistent at the group level and which ones are more important to identify individuals than others
 * Finally, we run several sanity checks (correlating identifiability with subject characteristics and artifact summary statistics & separating structural connectivity and functional connectivity)
 * We perform this analysis with our different analysis conditions: between session, within sessions, for both AEC and PSD, for both the broadband data and specific frequency bands
+* Please note that subject identification is referred to as differentiation in the manuscript and 'self-identifiability' is referred to as differentiability in the manuscript
 
 ### 5-PLS_analysis.m
 * Performs the Partial Least Square analysis to try and find relationships between individuals' identifiability matrices and demographic information
@@ -69,3 +72,6 @@ For this project we've been using [OMEGA](https://www.mcgill.ca/bic/resources/om
 
 ### Dependencies
 * Includes files that correspond to the assignation of the different anatomical areas to the resting state network, analysis used to compare movement/heart/eye artifacts to indidividuals' identifiability scores (used as sanity checks)...
+
+## Important Note
+Please note that subject identification is referred to as differentiation in the manuscript and 'self-identifiability' is referred to as differentiability in the manuscript.
